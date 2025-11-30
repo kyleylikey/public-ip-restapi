@@ -19,6 +19,9 @@ class Config:
     # For higher limits, you can use API key from ipapi.co
     API_KEY = os.getenv('IPAPI_API_KEY', '')  # Optional for basic usage
     
+    # Additional API keys for other data sources
+    IPINFO_API_KEY = os.getenv('IPINFO_API_KEY', '')
+    
     # Simple IP detection services (no API key required)
     CHECK_IPV4_URL = "https://api.ipify.org?format=json"
     CHECK_IPV6_URL = "https://api64.ipify.org?format=json"
@@ -29,6 +32,20 @@ class Config:
     
     # Cache Configuration
     CACHE_DURATION = 300  # Cache duration in seconds (5 minutes)
+    
+    # Database Configuration
+    DATABASE_PATH = os.getenv('IP_DATABASE_PATH', 'ip_history.db')
+    
+    # API Server Configuration
+    API_HOST = os.getenv('API_HOST', '0.0.0.0')
+    API_PORT = int(os.getenv('API_PORT', '5000'))
+    API_DEBUG = os.getenv('API_DEBUG', 'false').lower() == 'true'
+    
+    # Monitoring Configuration
+    MONITOR_INTERVAL = int(os.getenv('MONITOR_INTERVAL', '300'))  # seconds
+    
+    # Export Configuration
+    EXPORT_DIR = os.getenv('EXPORT_DIR', os.getcwd())
     
     # Display Configuration
     DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
