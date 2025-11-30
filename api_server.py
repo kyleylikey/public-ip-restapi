@@ -65,6 +65,14 @@ def create_app(config: dict = None) -> Flask:
     @app.route('/api/v1/ip/<ip_address>', methods=['GET'])
     def get_ip_info(ip_address: str):
         """Get information for a specific IP address"""
+        # Validate IP address format
+        import re
+        ipv4_pattern = r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
+        ipv6_pattern = r'^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$'
+        
+        if not (re.match(ipv4_pattern, ip_address) or re.match(ipv6_pattern, ip_address)):
+            return jsonify({'error': 'Invalid IP address format', 'ip': ip_address}), 400
+        
         use_cache = request.args.get('cache', 'true').lower() == 'true'
         store = request.args.get('store', 'false').lower() == 'true'
         
@@ -141,7 +149,11 @@ def create_app(config: dict = None) -> Flask:
     def get_history():
         """Get lookup history"""
         ip_filter = request.args.get('ip')
-        limit = int(request.args.get('limit', 100))
+        try:
+            limit = min(int(request.args.get('limit', 100)), 1000)
+            limit = max(limit, 1)
+        except (ValueError, TypeError):
+            limit = 100
         
         history = database.get_lookup_history(ip_address=ip_filter, limit=limit)
         
@@ -183,7 +195,11 @@ def create_app(config: dict = None) -> Flask:
         data = request.get_json() or {}
         format_type = data.get('format', 'json')
         ip_filter = data.get('ip')
-        limit = data.get('limit', 1000)
+        try:
+            limit = min(int(data.get('limit', 1000)), 10000)
+            limit = max(limit, 1)
+        except (ValueError, TypeError):
+            limit = 1000
         
         if format_type not in ['json', 'csv', 'txt', 'html']:
             return jsonify({'error': f'Unsupported format: {format_type}'}), 400
@@ -198,10 +214,12 @@ def create_app(config: dict = None) -> Flask:
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         filename = f"ip_export_{timestamp}"
         
-        # Export to temp directory
-        temp_dir = '/tmp/ip_exports'
-        os.makedirs(temp_dir, exist_ok=True)
-        export_manager.output_dir = temp_dir
+        # Export to system temp directory with proper permissions
+        import tempfile
+        temp_dir = tempfile.gettempdir()
+        export_subdir = os.path.join(temp_dir, 'ip_exports')
+        os.makedirs(export_subdir, exist_ok=True)
+        export_manager.output_dir = export_subdir
         
         file_path = export_manager.export(history, filename, format_type)
         
@@ -861,4 +879,5 @@ HISTORY_HTML = """
 # Entry point for running the server
 if __name__ == '__main__':
     app = create_app()
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Note: debug=False for production. Set API_DEBUG=true in environment for development.
+    app.run(host=Config.API_HOST, port=Config.API_PORT, debug=Config.API_DEBUG)

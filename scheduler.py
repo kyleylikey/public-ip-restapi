@@ -320,6 +320,15 @@ class ScheduledTask:
     
     def get_status(self) -> Dict:
         """Get scheduler status"""
+        def safe_timestamp(ts):
+            """Safely convert timestamp to ISO format"""
+            if ts is None:
+                return None
+            try:
+                return datetime.fromtimestamp(ts).isoformat()
+            except (ValueError, OSError, OverflowError):
+                return None
+        
         return {
             'running': self._running,
             'task_count': len(self._tasks),
@@ -327,8 +336,7 @@ class ScheduledTask:
                 tid: {
                     'interval': t['interval'],
                     'run_count': t['run_count'],
-                    'last_run': datetime.fromtimestamp(t['last_run']).isoformat() 
-                               if t['last_run'] else None
+                    'last_run': safe_timestamp(t['last_run'])
                 }
                 for tid, t in self._tasks.items()
             }

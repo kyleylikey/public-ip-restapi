@@ -90,10 +90,10 @@ class BatchProcessor:
         return ip_addresses
     
     def _is_valid_ip_format(self, ip: str) -> bool:
-        """Check if string looks like an IP address"""
+        """Check if string looks like a valid IP address"""
         import re
-        # IPv4 pattern
-        ipv4_pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
+        # IPv4 pattern with proper octet validation (0-255)
+        ipv4_pattern = r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
         # IPv6 pattern (simplified)
         ipv6_pattern = r'^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$'
         

@@ -37,12 +37,19 @@ class ExportManager:
         if format not in self.SUPPORTED_FORMATS:
             raise ValueError(f"Unsupported format: {format}. Supported: {self.SUPPORTED_FORMATS}")
         
+        # Sanitize filename to prevent path traversal
+        import re
+        sanitized_filename = re.sub(r'[^\w\-_]', '_', filename)
+        sanitized_filename = sanitized_filename.strip('_')
+        if not sanitized_filename:
+            sanitized_filename = 'export'
+        
         # Ensure data is a list
         if isinstance(data, dict):
             data = [data]
         
-        # Build full path
-        file_path = os.path.join(self.output_dir, f"{filename}.{format}")
+        # Build full path with sanitized filename
+        file_path = os.path.join(self.output_dir, f"{sanitized_filename}.{format}")
         
         if format == 'csv':
             self._export_csv(data, file_path)
